@@ -79,9 +79,48 @@ def init_db() -> None:
                 created_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS premium_calc_jobs (
+                job_id TEXT PRIMARY KEY,
+                job_status TEXT NOT NULL,
+                total_rows INTEGER NOT NULL DEFAULT 0,
+                unique_rows INTEGER NOT NULL DEFAULT 0,
+                total_chunks INTEGER NOT NULL DEFAULT 0,
+                done_chunks INTEGER NOT NULL DEFAULT 0,
+                failed_chunks INTEGER NOT NULL DEFAULT 0,
+                worker_count INTEGER NOT NULL DEFAULT 1,
+                chunk_size INTEGER NOT NULL DEFAULT 0,
+                input_json TEXT,
+                result_json TEXT,
+                error_message TEXT,
+                created_at TEXT NOT NULL,
+                started_at TEXT,
+                ended_at TEXT,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS premium_calc_chunks (
+                job_id TEXT NOT NULL,
+                chunk_id INTEGER NOT NULL,
+                chunk_status TEXT NOT NULL,
+                worker_id TEXT,
+                input_rows INTEGER NOT NULL DEFAULT 0,
+                output_rows INTEGER NOT NULL DEFAULT 0,
+                input_file TEXT,
+                output_file TEXT,
+                retry_count INTEGER NOT NULL DEFAULT 0,
+                error_message TEXT,
+                started_at TEXT,
+                ended_at TEXT,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY(job_id, chunk_id),
+                FOREIGN KEY(job_id) REFERENCES premium_calc_jobs(job_id) ON DELETE CASCADE
+            );
+
             CREATE INDEX IF NOT EXISTS idx_blocks_doc_page ON page_content_blocks(document_id, page_no, block_seq);
             CREATE INDEX IF NOT EXISTS idx_formulas_code ON formulas(formula_code);
             CREATE INDEX IF NOT EXISTS idx_premium_runs_created ON premium_runs(created_at);
+            CREATE INDEX IF NOT EXISTS idx_premium_jobs_status ON premium_calc_jobs(job_status, created_at);
+            CREATE INDEX IF NOT EXISTS idx_premium_chunks_status ON premium_calc_chunks(job_id, chunk_status);
             """
         )
 
