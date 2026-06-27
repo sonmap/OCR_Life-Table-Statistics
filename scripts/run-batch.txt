@@ -1,0 +1,4 @@
+Run batch command:
+
+cd backend
+python -m app.batch.run_premium_batch --life-table app/sample_data/life_table.csv --policies app/sample_data/policies.csv --output ../outputs/premium_result.csv
