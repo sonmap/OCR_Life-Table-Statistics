@@ -1,0 +1,6 @@
+policy_id,age,term,sum_assured,interest_rate,product_type,excel_premium
+P0001,40,20,10000000,0.03,term_life,
+P0002,35,30,50000000,0.03,term_life,
+P0003,45,20,30000000,0.035,endowment,
+P0004,30,25,10000000,0.025,whole_life,
+P0005,50,10,20000000,0.03,term_life,
