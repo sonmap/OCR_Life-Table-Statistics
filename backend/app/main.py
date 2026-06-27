@@ -11,6 +11,8 @@ from .actuarial.premium import calculate_from_csv
 from .batch.run_premium_batch import run_batch
 from .db import fetch_all, fetch_one, get_conn, init_db, insert_json_run, utc_now
 from .formula_catalog import load_sample_formula_catalog
+from .formula_parser import build_formula_dsl, get_formula_examples, parse_formula_candidate
+from .formula_parser_examples import examples_as_dicts, find_examples
 from .ocr_pipeline import process_upload
 
 SAMPLE_DIR = Path(os.environ.get("SAMPLE_DATA_DIR", "/app/app/sample_data"))
@@ -18,7 +20,7 @@ LIFE_TABLE_PATH = SAMPLE_DIR / "life_table.csv"
 POLICIES_PATH = SAMPLE_DIR / "policies.csv"
 BATCH_OUTPUT = Path("/app/data/batch_result.csv")
 
-app = FastAPI(title="OCR Life-Table Statistics API", version="0.1.0")
+app = FastAPI(title="OCR Life-Table Statistics API", version="0.1.1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,6 +38,10 @@ class PremiumRequest(BaseModel):
     product_type: str = Field("term_life")
 
 
+class FormulaParseRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db()
@@ -50,6 +56,24 @@ def health() -> dict[str, str]:
 @app.get("/formulas")
 def list_formulas() -> list[dict[str, Any]]:
     return fetch_all("SELECT * FROM formulas ORDER BY formula_code, id")
+
+
+@app.get("/formula-parser/examples")
+def formula_parser_examples(q: str = "") -> list[dict[str, Any]]:
+    if q:
+        return [item.__dict__ for item in find_examples(q)]
+    return examples_as_dicts()
+
+
+@app.get("/formula-parser/builtin-examples")
+def formula_parser_builtin_examples() -> list[dict[str, Any]]:
+    return get_formula_examples()
+
+
+@app.post("/formula-parser/parse")
+def formula_parser_parse(payload: FormulaParseRequest) -> dict[str, Any]:
+    result = parse_formula_candidate(payload.text)
+    return build_formula_dsl(result)
 
 
 @app.get("/documents")
