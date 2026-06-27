@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OCR Life-Table Statistics</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #20242a; }
+    header { background: #1f3a5f; color: white; padding: 20px 28px; }
+    main { padding: 24px; display: grid; gap: 18px; }
+    section { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    h2 { margin-top: 0; }
+    label { display: block; margin: 8px 0 4px; font-weight: 600; }
+    input, select, button { padding: 9px; margin: 4px 0; border: 1px solid #cfd6e4; border-radius: 8px; }
+    button { background: #1f6feb; color: white; border: none; cursor: pointer; }
+    pre { background: #0d1117; color: #c9d1d9; padding: 12px; border-radius: 8px; overflow: auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .formula { padding: 8px 12px; border-left: 4px solid #1f6feb; background: #f8fbff; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OCR Life-Table Statistics</h1>
+    <p>보험계리 OCR + 공식 DB + Python 보험료 산정 + Batch 검증 샘플</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section>
+        <h2>1. 보험료 단건 산정</h2>
+        <label>가입나이</label><input id="age" type="number" value="40" />
+        <label>보험기간</label><input id="term" type="number" value="20" />
+        <label>가입금액</label><input id="sumAssured" type="number" value="10000000" />
+        <label>예정이율</label><input id="interest" type="number" step="0.001" value="0.03" />
+        <label>상품유형</label>
+        <select id="productType">
+          <option value="term_life">정기보험</option>
+          <option value="whole_life">종신보험</option>
+          <option value="endowment">양로보험</option>
+          <option value="annuity_due">연금현가</option>
+        </select>
+        <br />
+        <button onclick="calculatePremium()">계산</button>
+        <pre id="premiumResult"></pre>
+      </section>
+
+      <section>
+        <h2>2. OCR 업로드</h2>
+        <input id="ocrFile" type="file" />
+        <button onclick="uploadOcr()">업로드/OCR</button>
+        <pre id="ocrResult"></pre>
+      </section>
+    </div>
+
+    <section>
+      <h2>3. 공식 카탈로그</h2>
+      <button onclick="loadFormulas()">공식 조회</button>
+      <div id="formulaList"></div>
+    </section>
+
+    <section>
+      <h2>4. Batch 보험료 산정</h2>
+      <button onclick="runBatch()">샘플 Batch 실행</button>
+      <pre id="batchResult"></pre>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
