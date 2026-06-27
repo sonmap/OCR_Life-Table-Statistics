@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ocr-life-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/app/sample_data:/app/app/sample_data:ro
+    environment:
+      - DB_PATH=/app/data/app.db
+      - SAMPLE_DATA_DIR=/app/app/sample_data
+
+  frontend:
+    build: ./frontend
+    container_name: ocr-life-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
