@@ -1,0 +1,42 @@
+[
+  {
+    "formula_code": "COMMUTATION_D",
+    "formula_name": "Commutation function D_x",
+    "latex": "D_x = v^x l_x",
+    "python_function": "commutation_D",
+    "status": "APPROVED",
+    "description": "Discounted number of lives at age x."
+  },
+  {
+    "formula_code": "COMMUTATION_N",
+    "formula_name": "Commutation function N_x",
+    "latex": "N_x = \\sum_{y=x}^{\\infty} D_y",
+    "python_function": "commutation_N",
+    "status": "APPROVED",
+    "description": "Reverse cumulative sum of D_y."
+  },
+  {
+    "formula_code": "COMMUTATION_M",
+    "formula_name": "Commutation function M_x",
+    "latex": "M_x = \\sum_{y=x}^{\\infty} v^{y+1} d_y",
+    "python_function": "commutation_M",
+    "status": "APPROVED",
+    "description": "Commutation function for life insurance benefits."
+  },
+  {
+    "formula_code": "TERM_INSURANCE",
+    "formula_name": "Term life net single premium",
+    "latex": "A^1_{x:\\overline{n}|} = \\frac{M_x - M_{x+n}}{D_x}",
+    "python_function": "term_life_net_single_premium",
+    "status": "APPROVED",
+    "description": "Net single premium rate for n-year term life insurance."
+  },
+  {
+    "formula_code": "ANNUITY_DUE",
+    "formula_name": "Life annuity-due",
+    "latex": "\\ddot{a}_{x:\\overline{n}|} = \\frac{N_x - N_{x+n}}{D_x}",
+    "python_function": "annuity_due",
+    "status": "APPROVED",
+    "description": "Present value of n-year life annuity-due."
+  }
+]
