@@ -9,7 +9,7 @@ import pytesseract
 from PIL import Image
 
 from .db import get_conn, utc_now
-from .formula_repair import repair_latex
+from .formula_parser import build_formula_dsl, extract_formula_candidates, parse_formula_candidate
 
 DATA_DIR = Path("/app/data")
 UPLOAD_DIR = DATA_DIR / "uploads"
@@ -94,8 +94,8 @@ def _extract_and_store_formulas(conn, doc_id: str, page_no: int, text: str, sour
     candidates = extract_formula_candidates(text)
     base_seq = _next_block_seq(conn, doc_id, page_no)
     for idx, raw in enumerate(candidates, start=1):
-        latex = repair_latex(raw)
-        formula_code = guess_formula_code(latex)
+        parsed = parse_formula_candidate(raw)
+        dsl = build_formula_dsl(parsed)
         cur = conn.execute(
             """
             INSERT INTO formulas(document_id,page_no,formula_code,formula_name,latex,python_function,status,source_type,confidence,metadata_json,created_at,updated_at)
@@ -104,14 +104,14 @@ def _extract_and_store_formulas(conn, doc_id: str, page_no: int, text: str, sour
             (
                 doc_id,
                 page_no,
-                formula_code,
-                formula_code.replace("_", " ").title() if formula_code else "OCR Formula Candidate",
-                latex,
-                formula_to_function(formula_code),
-                "NEEDS_REVIEW",
+                parsed.formula_code,
+                parsed.formula_name,
+                parsed.latex,
+                parsed.python_function,
+                parsed.status,
                 source_type,
-                0.55,
-                json.dumps({"raw_text": raw}, ensure_ascii=False),
+                parsed.confidence,
+                json.dumps(dsl, ensure_ascii=False),
                 utc_now(),
                 utc_now(),
             ),
@@ -129,56 +129,11 @@ def _extract_and_store_formulas(conn, doc_id: str, page_no: int, text: str, sour
                 "formula",
                 "equation",
                 raw,
-                latex,
-                json.dumps({"formula_id": formula_id, "formula_code": formula_code}, ensure_ascii=False),
+                parsed.latex,
+                json.dumps({"formula_id": formula_id, "formula_code": parsed.formula_code, "category": parsed.category, "confidence": parsed.confidence, "status": parsed.status}, ensure_ascii=False),
                 utc_now(),
             ),
         )
-
-
-def extract_formula_candidates(text: str) -> list[str]:
-    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
-    candidates: list[str] = []
-    buf: list[str] = []
-    for line in lines:
-        is_math = bool(re.search(r"(=|\bsum\b|Σ|∑|∞|\\sum|A_|D_|N_|M_|p_x|q_x|l_x|V_|P_)", line, flags=re.IGNORECASE))
-        if is_math:
-            buf.append(line)
-        else:
-            if buf:
-                candidates.append(" ".join(buf))
-                buf = []
-    if buf:
-        candidates.append(" ".join(buf))
-    return candidates[:20]
-
-
-def guess_formula_code(latex: str) -> str:
-    s = latex or ""
-    if "D_x" in s and "l_x" in s:
-        return "COMMUTATION_D"
-    if "N_x" in s and "\\sum" in s:
-        return "COMMUTATION_N"
-    if "M_x" in s and "\\sum" in s:
-        return "COMMUTATION_M"
-    if "M_x" in s and "D_x" in s and "M_{x+n}" in s:
-        return "TERM_INSURANCE"
-    if "M_x" in s and "D_x" in s:
-        return "WHOLE_LIFE_INSURANCE"
-    if "N_x" in s and "D_x" in s:
-        return "ANNUITY_DUE"
-    return "OCR_FORMULA"
-
-
-def formula_to_function(code: str) -> str | None:
-    return {
-        "COMMUTATION_D": "commutation_D",
-        "COMMUTATION_N": "commutation_N",
-        "COMMUTATION_M": "commutation_M",
-        "WHOLE_LIFE_INSURANCE": "whole_life_insurance",
-        "TERM_INSURANCE": "term_life_net_single_premium",
-        "ANNUITY_DUE": "annuity_due",
-    }.get(code)
 
 
 def _next_block_seq(conn, doc_id: str, page_no: int) -> int:
