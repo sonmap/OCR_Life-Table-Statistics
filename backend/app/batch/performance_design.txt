@@ -1,0 +1,10 @@
+Memory-first premium calculation design
+
+- bulk load reference data
+- local memory cache
+- precompute D N M values
+- group duplicate keys
+- split into chunks
+- calculate chunks
+- save result files
+- load to DB in batch
